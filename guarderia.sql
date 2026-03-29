@@ -38,3 +38,23 @@ SELECT id, (RANDOM()*5000+1000)::DECIMAL(10,2), CURRENT_DATE FROM ninos;
 SELECT * FROM ninos;
 SELECT COUNT(*) FROM ninos;
 SELECT n.nombre, p.monto FROM ninos n JOIN pagos p ON n.id = p.nino_id;
+
+
+-- TRANSACCIONES
+BEGIN;
+INSERT INTO ninos (nombre, fecha_nacimiento, genero)
+VALUES ('Transaccion OK','2020-01-01','Masculino');
+COMMIT;
+
+BEGIN;
+INSERT INTO ninos (nombre, fecha_nacimiento, genero)
+VALUES ('Transaccion FAIL','2020-01-01','Masculino');
+ROLLBACK;
+
+-- INDEXACIÓN
+EXPLAIN ANALYZE SELECT * FROM pagos WHERE nino_id = 10;
+
+CREATE INDEX idx_pagos_nino_id ON pagos(nino_id);
+
+EXPLAIN ANALYZE SELECT * FROM pagos WHERE nino_id = 10;
+
