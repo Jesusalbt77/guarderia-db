@@ -58,3 +58,21 @@ CREATE INDEX idx_pagos_nino_id ON pagos(nino_id);
 
 EXPLAIN ANALYZE SELECT * FROM pagos WHERE nino_id = 10;
 
+-- SERVIDOR REMOTO 
+
+CREATE EXTENSION IF NOT EXISTS postgres_fdw;
+
+CREATE SERVER servidor_remoto
+FOREIGN DATA WRAPPER postgres_fdw
+OPTIONS (host 'guarderia-postgres-remote', dbname 'guarderia_remota', port '5432');
+
+CREATE USER MAPPING FOR admin
+SERVER servidor_remoto
+OPTIONS (user 'admin', password '1234');
+
+IMPORT FOREIGN SCHEMA public
+LIMIT TO (empleados_remotos)
+FROM SERVER servidor_remoto INTO public;
+
+SELECT * FROM empleados_remotos;
+
