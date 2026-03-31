@@ -76,3 +76,40 @@ FROM SERVER servidor_remoto INTO public;
 
 SELECT * FROM empleados_remotos;
 
+-- PARALELISMO
+SET max_parallel_workers_per_gather = 4;
+EXPLAIN ANALYZE SELECT SUM(monto) FROM pagos;
+
+-- FUNCIÓN
+CREATE OR REPLACE FUNCTION total_pagado_nino(nino INT)
+RETURNS DECIMAL AS $$
+BEGIN
+  RETURN (SELECT SUM(monto) FROM pagos WHERE nino_id = nino);
+END;
+$$ LANGUAGE plpgsql;
+
+-- PROCEDIMIENTO
+CREATE OR REPLACE PROCEDURE registrar_pago(nino INT, monto DECIMAL)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  INSERT INTO pagos(nino_id, monto, fecha_pago)
+  VALUES (nino, monto, CURRENT_DATE);
+END;
+$$;
+
+-- TRIGGER
+CREATE OR REPLACE FUNCTION validar_pago()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF NEW.monto <= 0 THEN
+    RAISE EXCEPTION 'Monto inválido';
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_validar_pago
+BEFORE INSERT ON pagos
+FOR EACH ROW
+EXECUTE FUNCTION validar_pago();
